@@ -12,3 +12,9 @@ Composer: `buriti/i-educar-contratacoes-temporarias-package`
 ## Status
 
 Scaffold inicial (documentação + ServiceProvider). Implementação segue a ordem em `ORDEM-DESENVOLVIMENTO-LAGUNA.md`.
+
+## Onda 2
+
+```bash
+php packages/buriti/i-educar-contratacoes-temporarias-package/tests/run.php
+```
