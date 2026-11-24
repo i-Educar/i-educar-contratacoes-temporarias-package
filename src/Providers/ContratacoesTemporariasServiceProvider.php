@@ -2,7 +2,6 @@
 
 namespace iEducar\Packages\BuritiContratacoesTemporarias\Providers;
 
-use iEducar\Packages\BuritiContratacoesTemporarias\Services\ChamadaAct;
 use Illuminate\Support\ServiceProvider;
 
 class ContratacoesTemporariasServiceProvider extends ServiceProvider
@@ -11,7 +10,7 @@ class ContratacoesTemporariasServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->app->singleton(ChamadaAct::class);
+        // Services são value objects — instanciar com `new` nos callers (não bind no container).
     }
 
     public function boot(): void
