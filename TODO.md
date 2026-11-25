@@ -14,7 +14,8 @@
 - [ ] Checklist 5.15.x
 - [ ] CRUD edital/chamada/vaga
 - [ ] Importação de classificados
-- [ ] Portal público autenticado
+- [x] Portal público do candidato (`/contratacoes-temporarias/candidato`) + flag `ACT_APARECER_NA_HOME`
+- [ ] Autenticação dedicada do candidato (além do protocolo)
 - [ ] Motor de preferência/ordem
 - [ ] Comprovante PDF
 - [ ] Painel SME
