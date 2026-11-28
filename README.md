@@ -1,30 +1,54 @@
-# Contratações temporárias (TR 5.15)
+# Contratações temporárias (ACT)
 
-Pacote Buriti para o i-Educar **2.12** (organização [i-Educar](https://github.com/i-Educar)).
+Portal de escolha de vagas para contratação temporária: classificados, preferências e comprovantes.
 
 Composer: `buriti/i-educar-contratacoes-temporarias-package`
+
+## Para que serve
+
+Digitaliza o processo ACT da rede: publicação de vagas, ordenação de classificados, registro de preferências e emissão de comprovantes — integrado à vida funcional do servidor.
+
+## Desenho de funções
+
+| Função | Entrega |
+| --- | --- |
+| Vagas ACT | Abertura e publicação de oportunidades temporárias |
+| Classificados | Lista ordenada de candidatos aptos |
+| Preferência de vagas | Escolha online pelo candidato |
+| Comprovantes | Registro e emissão do resultado da escolha |
+| Acompanhamento SME | Visão do andamento das chamadas |
+
+## Quem usa
+
+- SME / RH educacional
+- Candidatos classificados
+- Escolas (lotação resultante)
+
+## Integrações
+
+- Servidor / RH educacional
+- Assinatura digital (documentos)
+- Núcleo (escolas, cargos)
 
 ## Compatibilidade
 
 | Produto | Versão |
 | --- | --- |
-| **i-Educar** | **2.12.x** (min. 2.12.0) |
-| **i-Diário** | Portabilis i-Diário (espelho Laguna) via API/SSO do core |
+| **i-Educar** | **2.12.x** |
+| **i-Diário** | Portabilis i-Diário (API / SSO do núcleo) |
 | Pacote | `0.2.0` |
 
-Declarado em `composer.json` → `extra.ieducar` e `extra.idiario`.
+Declarado em `composer.json` → `extra.ieducar` / `extra.idiario`.
 
-## Documentos Laguna / PE-77/2026
+## Documentação
 
-- `EPIC.md` · `ROADMAP.md` · `TODO.md` · `REQUISITOS-TR.md`
-- Padrão: `packages/buriti/PADRAO-PACOTE-2.12.md` (no monorepo)
+| Documento | Uso |
+| --- | --- |
+| [`EPIC.md`](./EPIC.md) | Escopo de produto, aceite e critérios |
+| [`ROADMAP.md`](./ROADMAP.md) | Fases e entregas |
+| [`TODO.md`](./TODO.md) | Backlog operacional |
+| [`REQUISITOS-TR.md`](./REQUISITOS-TR.md) | Rastreio de requisitos (planejamento) |
 
-## Status
+---
 
-Scaffold inicial (documentação + ServiceProvider). Implementação segue a ordem em `ORDEM-DESENVOLVIMENTO-LAGUNA.md`.
-
-## Onda 2
-
-```bash
-php packages/buriti/i-educar-contratacoes-temporarias-package/tests/run.php
-```
+Licença: **GPL-2.0-or-later** · Organização [i-Educar](https://github.com/i-Educar)
