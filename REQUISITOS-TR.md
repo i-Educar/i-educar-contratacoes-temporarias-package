@@ -3,7 +3,7 @@
 **Edital:** PE 77/2026 Laguna/SC · Anexo I
 **Cobertura documental:** **100%** dos 33 itens OCR abaixo.
 **PoC:** ≥85% demonstráveis; ≤15% em ≤30 dias.
-**Matriz mestre:** `tmp/edital-ocr/MATRIZ-REQUISITOS-TR.md`
+**Matriz mestre:** `packages/buriti/docs/laguna/MATRIZ-REQUISITOS-TR.md`
 
 ## 5.15 — Contratações temporárias (33 itens)
 

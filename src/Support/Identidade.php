@@ -4,11 +4,11 @@ namespace iEducar\Packages\BuritiContratacoesTemporarias\Support;
 
 final class Identidade
 {
-    public const COR = '#7c2d3a';
-    public const DESTAQUE = '#a33d4d';
-    public const COR_CLARA = '#f8e8eb';
+    public const COR = '#1d4ed8';
+    public const DESTAQUE = '#2f6bff';
+    public const COR_CLARA = '#e8eefc';
     public const ICONE = 'fa-briefcase';
-    public const NOME = 'Contratações temporárias';
+    public const NOME = 'Contratações';
 
     public const DESCRICAO = 'Editais ACT · inscrição pública e classificação';
 

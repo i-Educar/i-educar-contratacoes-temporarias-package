@@ -16,24 +16,22 @@
         ])->all();
     @endphp
 
-    <div class="bloco">
-        <form class="form-grid" method="get" action="{{ url('/contratacoes-temporarias/avaliacao') }}">
+    <div class="buriti-filtro-bloco">
+        <h2><i class="fa fa-filter"></i> Edital</h2>
+        <form class="buriti-filtro" method="get" action="{{ url('/contratacoes-temporarias/avaliacao') }}">
             @include('buriti-ui::select-busca', [
                 'campo' => 'processo_id',
                 'rotulo' => 'Edital em avaliação',
                 'icone' => 'fa-gavel',
                 'opcoes' => $opcoesProcesso,
                 'selecionado' => $processoId,
-                'vazio' => '— escolher edital —',
-                'placeholder' => 'Buscar edital…',
-                'ajuda' => 'Selecione o processo cuja banca está pontuando agora.',
+                'vazio' => 'Escolher edital',
                 'onchange' => 'this.form.submit()',
-                'colWide' => true,
-                'tamanho' => min(6, max(3, count($opcoesProcesso) ?: 3)),
+                'compacto' => true,
             ])
         </form>
         @if(!empty($comissao))
-            <p style="margin:10px 0 0;color:var(--suave)">Comissão: {{ collect($comissao)->pluck('nome')->implode(', ') }}</p>
+            <p style="margin:8px 0 0;color:var(--suave);font-size:.85rem">Comissão: {{ collect($comissao)->pluck('nome')->implode(', ') }}</p>
         @endif
     </div>
 

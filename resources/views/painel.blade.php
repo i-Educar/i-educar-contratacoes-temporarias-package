@@ -7,9 +7,9 @@
     Do edital ao resultado: inscrições (também pelo portal público), pontuação, recursos e distribuição de vagas.
 @endsection
 @section('acoes-topo')
-    <a class="botao" href="{{ url('/contratacoes-temporarias/processos') }}"><i class="fa fa-gavel"></i> Processos</a>
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/inscricoes') }}"><i class="fa fa-user-plus"></i> Inscrições</a>
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/candidato') }}" target="_blank" rel="noopener"><i class="fa fa-external-link"></i> Portal candidato</a>
+    <a class="botao icone" href="{{ url('/contratacoes-temporarias/processos') }}" title="Processos" aria-label="Processos"><i aria-hidden="true" class="fa fa-gavel"></i></a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/inscricoes') }}" title="Inscrições" aria-label="Inscrições"><i aria-hidden="true" class="fa fa-user-plus"></i></a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/candidato') }}" target="_blank" rel="noopener" title="Portal candidato" aria-label="Portal candidato"><i aria-hidden="true" class="fa fa-external-link"></i></a>
 @endsection
 
 @section('conteudo')

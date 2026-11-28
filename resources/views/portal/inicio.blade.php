@@ -4,25 +4,27 @@
 @section('conteudo')
     <h1>Inscreva-se nos editais abertos</h1>
     <p class="lead">
-        Como escolher uma vaga de emprego: leia o edital, envie seus documentos e guarde o protocolo.
-        Pessoas de fora da rede municipal também podem se candidatar por aqui.
+        Leia o edital, envie os documentos exigidos e guarde o protocolo.
+        Candidatos de fora da rede municipal também podem se inscrever por este portal.
     </p>
+
+    @include('buriti-ui::setor-contato', ['setor' => $setor ?? 'act', 'titulo' => 'Setor responsável pelos editais'])
 
     <div class="portal-passos">
         <article class="passo">
             <i class="fa fa-file-text-o" aria-hidden="true"></i>
             <strong>1. Escolha o edital</strong>
-            <p>Veja o prazo e a área (PEB, apoio, etc.).</p>
+            <p>Confira o prazo e a área (PEB, apoio, etc.).</p>
         </article>
         <article class="passo">
             <i class="fa fa-upload" aria-hidden="true"></i>
-            <strong>2. Envie os papéis</strong>
-            <p>Diploma, comprovantes e o que o edital pedir — como anexar no WhatsApp.</p>
+            <strong>2. Envie os documentos</strong>
+            <p>Diploma, comprovantes e demais exigências do edital, em PDF.</p>
         </article>
         <article class="passo">
             <i class="fa fa-ticket" aria-hidden="true"></i>
             <strong>3. Guarde o protocolo</strong>
-            <p>Com ele você acompanha a inscrição e o resultado.</p>
+            <p>Com ele você acompanha a inscrição e consulta o resultado publicado.</p>
         </article>
     </div>
 
@@ -35,9 +37,21 @@
                     <span style="color:var(--suave);font-size:.9rem">
                         {{ $p['numero'] ?: 'Edital' }}
                         · {{ $p['inscricao_inicio'] ?? '—' }} a {{ $p['inscricao_fim'] ?? '—' }}
+                        @if(!empty($p['vagas_qtd'])) · {{ $p['vagas_qtd'] }} oferta(s)@endif
                     </span>
                     @if(!empty($p['descricao']))
                         <p style="margin:6px 0 0;color:var(--suave);font-size:.9rem">{{ \Illuminate\Support\Str::limit($p['descricao'], 180) }}</p>
+                    @endif
+                    @if(!empty($p['cargos']))
+                        <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+                            @foreach($p['cargos'] as $c)
+                                <span class="badge">
+                                    {{ $c['cargo'] }}
+                                    · {{ $c['quantidade'] }} vaga{{ $c['quantidade'] > 1 ? 's' : '' }}
+                                    @if($c['escolas'] > 0) · {{ $c['escolas'] }} escola{{ $c['escolas'] > 1 ? 's' : '' }}@endif
+                                </span>
+                            @endforeach
+                        </div>
                     @endif
                 </div>
                 <a class="botao" href="{{ url('/contratacoes-temporarias/candidato/inscrever/'.$p['id']) }}">
@@ -62,4 +76,11 @@
             </ul>
         </section>
     @endif
+
+    @include('buriti-ui::lista-resultados-pdf', [
+        'titulo' => 'Resultados publicados',
+        'lead' => 'Após a divulgação ou o encerramento das fases de cada edital, baixe o PDF com identificação parcial (publicidade e LGPD). A lista completa não é exibida nesta tela.',
+        'itens' => $resultadosPdf ?? [],
+        'vazio' => 'Nenhum edital com resultado disponível para download neste momento.',
+    ])
 @endsection

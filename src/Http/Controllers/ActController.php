@@ -14,6 +14,7 @@ use iEducar\Packages\BuritiContratacoesTemporarias\Services\PocRegistro;
 use iEducar\Packages\BuritiContratacoesTemporarias\Services\ProtocoloInscricao;
 use iEducar\Packages\BuritiContratacoesTemporarias\Services\RecursoProcesso;
 use iEducar\Packages\BuritiContratacoesTemporarias\Services\ResultadoFinal;
+use iEducar\Packages\BuritiContratacoesTemporarias\Services\VagaOferta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class ActController extends Controller
@@ -101,11 +103,11 @@ class ActController extends Controller
             'analiseTitulo' => 'Editais e recursos',
             'resumo' => 'Contratações temporárias (ACT) · edital, inscrição com protocolo, avaliação, recurso e resultado.',
             'atalhos' => [
-                ['url' => '/contratacoes-temporarias/processos', 'icone' => 'fa-gavel', 'rotulo' => '1. Edital', 'meta' => 'Fases e comissão'],
-                ['url' => '/contratacoes-temporarias/inscricoes', 'icone' => 'fa-user-plus', 'rotulo' => '2. Inscrição', 'meta' => 'Protocolo + anexos'],
-                ['url' => '/contratacoes-temporarias/avaliacao', 'icone' => 'fa-calculator', 'rotulo' => '3. Avaliação', 'meta' => 'Pontuação'],
-                ['url' => '/contratacoes-temporarias/recursos', 'icone' => 'fa-balance-scale', 'rotulo' => '4. Recurso', 'meta' => 'Pedido e resposta'],
-                ['url' => '/contratacoes-temporarias/resultado', 'icone' => 'fa-trophy', 'rotulo' => '5. Resultado', 'meta' => 'Classificação'],
+                ['url' => '/contratacoes-temporarias/processos', 'icone' => 'fa-gavel', 'rotulo' => 'Edital', 'meta' => 'Fases e comissão'],
+                ['url' => '/contratacoes-temporarias/inscricoes', 'icone' => 'fa-user-plus', 'rotulo' => 'Inscrição', 'meta' => 'Protocolo + anexos'],
+                ['url' => '/contratacoes-temporarias/avaliacao', 'icone' => 'fa-calculator', 'rotulo' => 'Avaliação', 'meta' => 'Pontuação'],
+                ['url' => '/contratacoes-temporarias/recursos', 'icone' => 'fa-balance-scale', 'rotulo' => 'Recurso', 'meta' => 'Pedido e resposta'],
+                ['url' => '/contratacoes-temporarias/resultado', 'icone' => 'fa-trophy', 'rotulo' => 'Resultado', 'meta' => 'Classificação'],
                 ['url' => '/contratacoes-temporarias/protocolo', 'icone' => 'fa-search', 'rotulo' => 'Protocolo', 'meta' => 'Acompanhar'],
             ],
             'fluxoTitulo' => 'Fluxo do processo seletivo',
@@ -198,7 +200,47 @@ class ActController extends Controller
             'proximos' => FluxoProcesso::proximos($status),
             'rotulosStatus' => $this->rotulosStatus(),
             'inscricoesQtd' => count(array_filter($this->inscricoesLista(), static fn ($i) => $i['processo_id'] === $id)),
+            'vagas' => VagaOferta::doProcesso($id),
+            'cargosResumo' => VagaOferta::cargosResumo($id),
+            'escolasCatalogo' => VagaOferta::escolasCatalogo(),
         ]);
+    }
+
+    public function salvarVaga(Request $request, int $id): RedirectResponse
+    {
+        if ($this->processoPorId($id) === null) {
+            return back()->with('erro', 'Processo não encontrado.');
+        }
+        try {
+            $vagaId = VagaOferta::cadastrar($id, [
+                'cargo' => trim((string) $request->input('cargo', '')),
+                'escola_id' => (int) $request->input('escola_id', 0),
+                'escola' => trim((string) $request->input('escola', '')),
+                'quantidade' => (int) $request->input('quantidade', 1),
+                'carga_horaria' => trim((string) $request->input('carga_horaria', '')),
+                'segmento' => trim((string) $request->input('segmento', '')),
+                'turmas' => trim((string) $request->input('turmas', '')),
+                'endereco' => trim((string) $request->input('endereco', '')),
+            ]);
+        } catch (Throwable $e) {
+            return back()->withInput()->with('erro', $e->getMessage());
+        }
+
+        ProtocoloInscricao::evento($id, null, null, 'vaga', 'Vaga/cargo cadastrado #'.$vagaId, $this->nomeUsuario());
+
+        return back()->with('ok', 'Cargo/vaga incluído(a) no edital e visível ao candidato.');
+    }
+
+    public function removerVaga(int $id, int $vagaId): RedirectResponse
+    {
+        if ($this->processoPorId($id) === null) {
+            return back()->with('erro', 'Processo não encontrado.');
+        }
+        if (! VagaOferta::remover($vagaId)) {
+            return back()->with('erro', 'Vaga não encontrada.');
+        }
+
+        return back()->with('ok', 'Vaga removida do edital.');
     }
 
     public function alterarStatusProcesso(Request $request, int $id): RedirectResponse
@@ -311,7 +353,7 @@ class ActController extends Controller
             'processoId' => $processoId,
             'processo' => $proc,
             'documentos' => $processoId > 0 ? DocumentoRegra::doProcesso($processoId) : [],
-            'vagas' => $this->vagas(),
+            'vagas' => $processoId > 0 ? VagaOferta::doProcesso($processoId) : VagaOferta::todas(),
             'podeInscrever' => $proc !== null && FluxoProcesso::podeInscrever($proc['status']),
             'anexoMaxKb' => AnexoAct::maxKb(),
             'slaPrefs' => (int) config('act.sla_preferencias', 3),
@@ -794,6 +836,59 @@ class ActController extends Controller
         ]);
     }
 
+    public function exportarClassificados(Request $request): Response|RedirectResponse
+    {
+        $this->garantirSeed();
+        $processos = $this->processosLista();
+        $processoId = (int) $request->input('processo_id', $request->query('processo_id', $processos[0]['id'] ?? 0));
+        $itens = $processoId ? ResultadoFinal::ultimo($processoId) : [];
+        if ($itens === []) {
+            foreach (PocRegistro::listar('inscricao') as $r) {
+                $p = $r['payload'];
+                if ((int) ($p['processo_id'] ?? 0) !== $processoId && $processoId > 0) {
+                    continue;
+                }
+                $itens[] = [
+                    'inscricao_id' => $r['id'],
+                    'nome' => (string) ($p['nome'] ?? $r['titulo']),
+                    'protocolo' => $p['protocolo'] ?? $r['meta'],
+                    'pontuacao' => (float) ($p['pontuacao'] ?? 0),
+                    'classificacao' => (int) ($p['classificacao'] ?? 0),
+                    'status' => (string) ($p['status'] ?? 'inscrito'),
+                    'servidor_id' => $p['servidor_id'] ?? null,
+                    'escola_contratacao' => $p['escola_contratacao'] ?? null,
+                ];
+            }
+            usort($itens, static fn ($a, $b) => ($a['classificacao'] ?: 9999) <=> ($b['classificacao'] ?: 9999));
+        }
+
+        $linhas = [];
+        foreach ($itens as $c) {
+            $linhas[] = [
+                $c['classificacao'] ?? '',
+                (string) ($c['nome'] ?? ''),
+                (string) ($c['protocolo'] ?? ''),
+                $c['pontuacao'] ?? 0,
+                (string) ($c['status'] ?? ''),
+                $c['servidor_id'] ?? '',
+                $c['escola_contratacao'] ?? '',
+            ];
+        }
+
+        $subtitulo = $processoId > 0 ? 'Processo #'.$processoId : 'Todos os processos';
+
+        return \iEducar\Packages\BuritiExportacaoUnificada\Support\ExportacaoModulo::download(
+            'Classificados',
+            ['Classificação', 'Nome', 'Protocolo', 'Pontuação', 'Status', 'Servidor', 'Escola'],
+            $linhas,
+            'Contratações temporárias',
+            strtolower(trim((string) $request->input('formato', 'pdf'))),
+            $subtitulo,
+            null,
+            'act-classificados',
+        );
+    }
+
     public function admitir(Request $request, int $id): RedirectResponse
     {
         if (! Acesso::permite(Processos::ADMITIR, 'gravar')) {
@@ -1017,18 +1112,14 @@ class ActController extends Controller
     }
 
     /** @return list<array{id:int,titulo:string}> */
-    private function vagas(): array
+    private function vagas(?int $processoId = null): array
     {
-        $out = [];
-        foreach (PocRegistro::listar('vaga') as $v) {
-            $payload = $v['payload'];
-            $out[] = [
-                'id' => (int) ($payload['vaga_id'] ?? $v['id']),
-                'titulo' => $v['titulo'],
-            ];
-        }
-
-        return $out;
+        return array_map(static fn (array $v): array => [
+            'id' => (int) $v['id'],
+            'titulo' => (string) $v['titulo'],
+            'cargo' => (string) $v['cargo'],
+            'escola' => (string) $v['escola'],
+        ], $processoId !== null ? VagaOferta::doProcesso($processoId) : VagaOferta::todas());
     }
 
     private function garantirSeed(): void

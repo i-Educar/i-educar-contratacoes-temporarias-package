@@ -32,7 +32,7 @@ final class Processos
     public static function titulos(): array
     {
         return [
-            self::RAIZ => 'Contratações temporárias',
+            self::RAIZ => 'Contratações',
             self::PAINEL => 'Painel',
             self::PROCESSOS => 'Processos seletivos',
             self::CLASSIFICADOS => 'Classificados',

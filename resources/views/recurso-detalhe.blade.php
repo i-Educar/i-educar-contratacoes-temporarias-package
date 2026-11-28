@@ -7,7 +7,7 @@
     {{ $recurso['candidato'] }} · {{ $recurso['protocolo'] ?? '' }} · {{ \iEducar\Packages\BuritiContratacoesTemporarias\Services\RecursoProcesso::rotulo($recurso['status']) }}
 @endsection
 @section('acoes-topo')
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/recursos?processo_id='.$recurso['processo_id']) }}"><i class="fa fa-list"></i> Recursos</a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/recursos?processo_id='.$recurso['processo_id']) }}" title="Recursos" aria-label="Recursos"><i aria-hidden="true" class="fa fa-list"></i></a>
 @endsection
 
 @section('conteudo')
@@ -17,7 +17,7 @@
                 <span class="avatar">{{ mb_substr($recurso['candidato'] ?? 'C', 0, 1) }}</span>
                 <div>
                     <strong>{{ $recurso['candidato'] }}</strong>
-                    <small>Recurso do processo seletivo — como uma conversa no WhatsApp</small>
+                    <small>Recurso do processo seletivo — trâmite institucional</small>
                 </div>
             </div>
             <div class="buriti-chat-fios" id="chat-recurso">
@@ -71,7 +71,7 @@
                             'campo' => 'anexo',
                             'rotulo' => 'Anexar PDF da resposta (opcional)',
                             'tituloAcao' => 'Soltar o PDF aqui',
-                            'ajuda' => 'Como anexar um documento no WhatsApp.',
+                            'ajuda' => 'Anexe o PDF da manifestação.',
                             'accept' => 'application/pdf,.pdf',
                             'icone' => 'fa-file-pdf-o',
                         ])

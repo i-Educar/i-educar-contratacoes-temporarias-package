@@ -7,11 +7,14 @@ use iEducar\Packages\BuritiContratacoesTemporarias\Services\DocumentoRegra;
 use iEducar\Packages\BuritiContratacoesTemporarias\Services\FluxoProcesso;
 use iEducar\Packages\BuritiContratacoesTemporarias\Services\PocRegistro;
 use iEducar\Packages\BuritiContratacoesTemporarias\Services\ProtocoloInscricao;
+use iEducar\Packages\BuritiContratacoesTemporarias\Services\ResultadoFinal;
+use iEducar\Packages\BuritiContratacoesTemporarias\Services\VagaOferta;
 use iEducar\Packages\BuritiContratacoesTemporarias\Support\Identidade;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Throwable;
 
 /**
@@ -24,6 +27,8 @@ class CandidatoPortalController extends Controller
         $abertos = [];
         $outros = [];
         foreach ($this->processos() as $p) {
+            $p['cargos'] = VagaOferta::cargosResumo((int) $p['id']);
+            $p['vagas_qtd'] = count(VagaOferta::doProcesso((int) $p['id']));
             if (FluxoProcesso::podeInscrever($p['status'])) {
                 $abertos[] = $p;
             } else {
@@ -36,6 +41,8 @@ class CandidatoPortalController extends Controller
             'municipio' => config('app.name', 'Rede municipal'),
             'abertos' => $abertos,
             'outros' => array_slice($outros, 0, 6),
+            'setor' => $this->setor(),
+            'resultadosPdf' => $this->itensResultadoPdf(),
         ]);
     }
 
@@ -55,9 +62,11 @@ class CandidatoPortalController extends Controller
             'municipio' => config('app.name', 'Rede municipal'),
             'processo' => $proc,
             'documentos' => DocumentoRegra::doProcesso($id),
-            'vagas' => $this->vagas(),
+            'vagas' => VagaOferta::doProcesso($id),
+            'cargosResumo' => VagaOferta::cargosResumo($id),
             'anexoMaxKb' => AnexoAct::maxKb(),
             'slaPrefs' => (int) config('act.sla_preferencias', 3),
+            'setor' => $this->setor(),
         ]);
     }
 
@@ -165,6 +174,7 @@ class CandidatoPortalController extends Controller
             'inscricao' => $ins,
             'processo' => $proc,
             'timeline' => ProtocoloInscricao::timeline((string) ($ins['protocolo'] ?? ''), $id),
+            'setor' => $this->setor(),
         ]);
     }
 
@@ -190,7 +200,154 @@ class CandidatoPortalController extends Controller
             'q' => $q,
             'inscricao' => $inscricao,
             'timeline' => $timeline,
+            'setor' => $this->setor(),
         ]);
+    }
+
+    public function resultados(): View
+    {
+        return view('act::portal.resultados', [
+            'identidade' => Identidade::tokens(),
+            'municipio' => config('app.name', 'Rede municipal'),
+            'setor' => $this->setor(),
+            'resultadosPdf' => $this->itensResultadoPdf(),
+        ]);
+    }
+
+    /**
+     * PDF público de classificação do processo (após divulgação / encerramento das fases).
+     * Layout institucional via Exportação unificada.
+     */
+    public function resultadoPdf(int $id): SymfonyResponse
+    {
+        $proc = $this->processoPorId($id);
+        if ($proc === null || ! $this->processoPodePublicarPdf($proc)) {
+            abort(404, 'Resultado ainda não disponível para este edital.');
+        }
+
+        $linhas = $this->linhasResultadosPublicos($id);
+        $titulo = 'Classificação — '.$proc['titulo'];
+        $subtitulo = trim(($proc['numero'] ?? '').' · '.FluxoProcesso::rotulo((string) $proc['status']));
+        $slug = preg_replace('/[^\w\-]+/u', '-', mb_strtolower((string) $proc['titulo'])) ?: 'edital';
+        $nomeBase = 'resultado-contratacao-'.$id.'-'.$slug;
+        $cabecalhos = ['Posição', 'Candidato', 'Protocolo', 'Pontuação', 'Situação'];
+
+        if (class_exists(\iEducar\Packages\BuritiExportacaoUnificada\Support\ExportacaoModulo::class)
+            && \iEducar\Packages\BuritiExportacaoUnificada\Support\ExportacaoModulo::disponivel()) {
+            return \iEducar\Packages\BuritiExportacaoUnificada\Support\ExportacaoModulo::download(
+                $titulo,
+                $cabecalhos,
+                $linhas,
+                'Contratações',
+                'pdf',
+                $subtitulo !== '' ? $subtitulo : 'Resultado público do edital',
+                'Portal público · Contratações temporárias',
+                $nomeBase,
+                true,
+            );
+        }
+
+        if (class_exists(\iEducar\Packages\BuritiLagunaAmbiente\Support\PdfTabelaPublica::class)) {
+            return \iEducar\Packages\BuritiLagunaAmbiente\Support\PdfTabelaPublica::baixar(
+                $titulo,
+                $cabecalhos,
+                $linhas,
+                $nomeBase.'.pdf',
+                $subtitulo !== '' ? $subtitulo : null,
+            );
+        }
+
+        abort(503, 'Geração de PDF indisponível.');
+    }
+
+    /**
+     * @return list<array{titulo:string,meta:string,url:string,rotulo:string}>
+     */
+    private function itensResultadoPdf(): array
+    {
+        $itens = [];
+        foreach ($this->processos() as $p) {
+            if (! $this->processoPodePublicarPdf($p)) {
+                continue;
+            }
+            $meta = array_filter([
+                $p['numero'] !== '' ? (string) $p['numero'] : null,
+                FluxoProcesso::rotulo((string) $p['status']),
+            ]);
+            $itens[] = [
+                'titulo' => (string) $p['titulo'],
+                'meta' => implode(' · ', $meta),
+                'url' => url('/contratacoes-temporarias/candidato/resultados/'.$p['id'].'/pdf'),
+                'rotulo' => 'Baixar PDF',
+            ];
+        }
+
+        return $itens;
+    }
+
+    /** @param  array<string,mixed>  $proc */
+    private function processoPodePublicarPdf(array $proc): bool
+    {
+        $status = (string) ($proc['status'] ?? '');
+        if (FluxoProcesso::podePublicarResultado($status)) {
+            return true;
+        }
+
+        return ResultadoFinal::ultimo((int) $proc['id']) !== [];
+    }
+
+    /**
+     * @return list<list<string>>
+     */
+    private function linhasResultadosPublicos(int $processoId): array
+    {
+        $linhas = [];
+        if ($processoId < 1) {
+            return $linhas;
+        }
+        foreach (ResultadoFinal::ultimo($processoId) as $item) {
+            $linhas[] = [
+                (string) ($item['classificacao'] ?? '—'),
+                $this->anonimizar((string) ($item['nome'] ?? '')),
+                (string) ($item['protocolo'] ?? '—'),
+                number_format((float) ($item['pontuacao'] ?? 0), 1, ',', '.'),
+                (string) ($item['status'] ?? 'classificado'),
+            ];
+        }
+
+        return $linhas;
+    }
+
+    private function anonimizar(string $nome): string
+    {
+        if (class_exists(\iEducar\Packages\BuritiLagunaAmbiente\Support\SetorResponsavel::class)) {
+            return \iEducar\Packages\BuritiLagunaAmbiente\Support\SetorResponsavel::anonimizarNome($nome);
+        }
+        $nome = trim($nome);
+        if ($nome === '') {
+            return '—';
+        }
+        $partes = preg_split('/\s+/u', $nome) ?: [];
+
+        return implode(' ', array_map(static fn ($p) => mb_substr($p, 0, 1).'****', $partes));
+    }
+
+    /** @return array{nome:string,endereco:string,horario:string,telefone:string,email:string,observacao:string,publicado:bool} */
+    private function setor(): array
+    {
+        if (! class_exists(\iEducar\Packages\BuritiLagunaAmbiente\Support\SetorResponsavel::class)) {
+            return [
+                'nome' => '',
+                'endereco' => '',
+                'horario' => '',
+                'telefone' => '',
+                'email' => '',
+                'observacao' => '',
+                'publicado' => false,
+            ];
+        }
+
+        return \iEducar\Packages\BuritiLagunaAmbiente\Support\SetorResponsavel::de('act');
     }
 
     /** @return list<array<string,mixed>> */
@@ -251,17 +408,4 @@ class CandidatoPortalController extends Controller
         ];
     }
 
-    /** @return list<array{id:int,titulo:string}> */
-    private function vagas(): array
-    {
-        $out = [];
-        foreach (PocRegistro::listar('vaga', 200) as $r) {
-            $out[] = [
-                'id' => $r['id'],
-                'titulo' => (string) ($r['payload']['titulo'] ?? $r['titulo']),
-            ];
-        }
-
-        return $out;
-    }
 }

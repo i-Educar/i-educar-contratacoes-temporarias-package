@@ -19,6 +19,13 @@ final class PortalAberto
             return null;
         }
 
+        if (class_exists(\iEducar\Packages\BuritiLagunaAmbiente\Support\ModuloConfiguracao::class)) {
+            $cfg = \iEducar\Packages\BuritiLagunaAmbiente\Support\ModuloConfiguracao::class;
+            if (! $cfg::ativo('act') || ! $cfg::portalExterno('act')) {
+                return null;
+            }
+        }
+
         $portal = url('/contratacoes-temporarias/candidato');
 
         if (! (bool) config('act.public.exigir_inscricao_aberta', true)) {

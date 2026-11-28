@@ -31,12 +31,21 @@ class ContratacoesTemporariasServiceProvider extends ServiceProvider
         PublicModuleRegistry::register('act-candidato', [
             'package' => self::PACKAGE,
             'titulo' => (string) config('act.public.titulo', 'Contratações temporárias'),
-            'descricao' => 'Portal do candidato — inscrição em editais ACT (também para quem não é da rede)',
+            'descricao' => 'Portal do candidato — inscrição em editais ACT, também para quem não é da rede.',
             'url' => static fn (): ?string => PortalAberto::url(),
             'icone' => Identidade::ICONE,
-            'css_class' => 'public-module',
-            'aparecer_na_home' => (bool) config('act.public.aparecer_na_home', true),
-            'ordem' => (int) config('act.public.ordem', 65),
+            'css_class' => 'public-module act',
+            'aparecer_na_home' => static function (): bool {
+                if (! class_exists(\iEducar\Packages\BuritiLagunaAmbiente\Support\ModuloConfiguracao::class)) {
+                    return (bool) config('act.public.aparecer_na_home', true);
+                }
+
+                return \iEducar\Packages\BuritiLagunaAmbiente\Support\ModuloConfiguracao::aparecerNaHome('act');
+            },
+            'ordem' => (int) config('act.public.ordem', 40),
+            'cor' => Identidade::COR,
+            'periodo' => 'Sob edital aberto',
+            'regra' => 'Candidatos externos · sem conta i-Educar',
         ]);
 
         if ($this->app->runningInConsole()) {
@@ -60,6 +69,20 @@ class ContratacoesTemporariasServiceProvider extends ServiceProvider
         ])->group($root.'/routes/web.php');
 
         View::composer('act::*', function ($view): void {
+            $portal = request()->is('contratacoes-temporarias/portal*')
+                || request()->is('*/portal*')
+                || ! auth()->check();
+
+            if (! $portal
+                && class_exists(\iEducar\Packages\BuritiRhEducacional\Support\RhAgregacao::class)
+                && \iEducar\Packages\BuritiRhEducacional\Support\RhAgregacao::ativa()) {
+                $view->with('identidade', \iEducar\Packages\BuritiRhEducacional\Support\RhAgregacao::identidade());
+                $view->with('menuGrupos', \iEducar\Packages\BuritiRhEducacional\Support\RhAgregacao::menuGrupos());
+                $view->with('homeModulo', url(\iEducar\Packages\BuritiRhEducacional\Support\RhAgregacao::homeModulo()));
+                $view->with('nomeModulo', 'RH educacional');
+
+                return;
+            }
             $view->with('identidade', Identidade::tokens());
             $view->with('menuGrupos', MenuFluxo::grupos([
                 'painel' => true,

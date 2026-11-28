@@ -4,11 +4,38 @@
 @section('icone-tela', 'fa-user-plus')
 @section('titulo-tela', 'Inscrições no processo')
 @section('lead')
-    Cadastro pela SME ou pelo portal público: gera protocolo e anexa documentos como na ficha de matrícula.
+    Foque nos inscritos; cadastrar e o portal ficam nos botões.
 @endsection
 @section('acoes-topo')
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/candidato') }}" target="_blank" rel="noopener"><i class="fa fa-external-link"></i> Portal do candidato</a>
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/protocolo') }}"><i class="fa fa-search"></i> Protocolo</a>
+    @if(!empty($podeInscrever))
+        <button type="button" class="botao primaria icone" data-buriti-modal="modal-nova-inscricao" title="Nova inscrição" aria-label="Nova inscrição"><i aria-hidden="true" class="fa fa-plus"></i></button>
+    @elseif($processo)
+        <button type="button" class="botao buriti-acao-bloqueada icone" disabled title="Inscrições fechadas nesta fase" aria-label="Nova inscrição"><i aria-hidden="true" class="fa fa-lock"></i></button>
+    @endif
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/candidato') }}" target="_blank" rel="noopener" title="Portal" aria-label="Portal"><i aria-hidden="true" class="fa fa-external-link"></i></a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/protocolo') }}" title="Protocolo" aria-label="Protocolo"><i aria-hidden="true" class="fa fa-search"></i></a>
+@endsection
+
+@section('foco')
+<section class="buriti-foco">
+    <p class="buriti-foco-kicker">Edital</p>
+    <h2 class="buriti-foco-titulo">
+        @if($processo)
+            {{ $processo['titulo'] ?? 'Processo' }} · {{ count($linhas ?? []) }} inscrito(s)
+        @else
+            Escolha um edital para ver as fichas
+        @endif
+    </h2>
+    <p class="buriti-foco-texto">
+        @if(!empty($podeInscrever))
+            Cadastro pela SME ou pelo portal público.
+        @elseif($processo)
+            Inscrições fechadas nesta fase ({{ \iEducar\Packages\BuritiContratacoesTemporarias\Services\FluxoProcesso::rotulo($processo['status']) }}).
+        @else
+            Selecione o processo abaixo.
+        @endif
+    </p>
+</section>
 @endsection
 
 @section('conteudo')
@@ -20,69 +47,21 @@
         ])->all();
     @endphp
 
-    <div class="aviso-portal">
-        <p><strong>Quem é de fora da rede</strong> se inscreve pelo portal público (link no login, quando a flag estiver ligada). Aqui a SME registra ou acompanha as fichas.</p>
-        <a class="botao claro" href="{{ url('/contratacoes-temporarias/candidato') }}" target="_blank" rel="noopener">Abrir portal</a>
-    </div>
-
-    <div class="bloco">
-        <form class="form-grid" method="get" action="{{ url('/contratacoes-temporarias/inscricoes') }}">
+    <div class="buriti-filtro-bloco">
+        <h2><i class="fa fa-filter"></i> Edital</h2>
+        <form class="buriti-filtro" method="get" action="{{ url('/contratacoes-temporarias/inscricoes') }}">
             @include('buriti-ui::select-busca', [
                 'campo' => 'processo_id',
                 'rotulo' => 'Edital / processo',
                 'icone' => 'fa-gavel',
                 'opcoes' => $opcoesProcesso,
                 'selecionado' => $processoId,
-                'vazio' => '— escolher edital —',
-                'placeholder' => 'Digite o nome ou número do edital…',
-                'ajuda' => 'Escolha o edital para ver inscritos e, se a fase permitir, cadastrar uma ficha.',
+                'vazio' => 'Escolher edital',
                 'onchange' => 'this.form.submit()',
-                'obrigatorio' => false,
-                'colWide' => true,
-                'tamanho' => min(6, max(3, count($opcoesProcesso) ?: 3)),
+                'compacto' => true,
             ])
         </form>
     </div>
-
-    @if(!empty($podeInscrever))
-        <div class="bloco">
-            <h2><i class="fa fa-plus"></i> Nova inscrição (SME)</h2>
-            <p style="margin:0 0 12px;color:var(--suave)">Use quando a pessoa estiver na secretaria. Candidatos externos devem preferir o portal.</p>
-            <form class="form-grid" method="post" action="{{ url('/contratacoes-temporarias/inscricoes') }}" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="processo_id" value="{{ $processoId }}">
-                <label>Nome completo <input name="nome" required placeholder="Como no documento"></label>
-                <label>CPF <input name="cpf" required placeholder="somente números" inputmode="numeric"></label>
-                <label>E-mail <input type="email" name="email" placeholder="para contato"></label>
-                <label>Telefone <input name="telefone" placeholder="WhatsApp"></label>
-                @if(!empty($vagas))
-                    @include('buriti-ui::select-multi', [
-                        'campo' => 'preferencias[]',
-                        'rotulo' => 'Preferência de vagas / escolas (ordem)',
-                        'icone' => 'fa-building',
-                        'opcoes' => collect($vagas)->map(fn ($v) => ['id' => $v['id'], 'nome' => $v['titulo']])->all(),
-                        'ajuda' => 'Marque até '.($slaPrefs ?? 3).' opções — a ordem vale como na escolha de escolas.',
-                        'tamanho' => min(6, max(3, count($vagas))),
-                    ])
-                @endif
-                @foreach(($documentos ?? []) as $d)
-                    @include('buriti-ui::campo-anexo', [
-                        'campo' => 'doc_'.$d['codigo'],
-                        'rotulo' => $d['nome'].($d['obrigatorio'] ? ' *' : ''),
-                        'tituloAcao' => 'Soltar «'.$d['nome'].'» aqui',
-                        'ajuda' => strtoupper(implode(', ', $d['extensoes'])).' · até '.$anexoMaxKb.' KB · máx '.$d['pontuacao_max'].' pts',
-                        'accept' => '.'.implode(',.', $d['extensoes']),
-                        'obrigatorio' => ! empty($d['obrigatorio']),
-                        'icone' => 'fa-id-card',
-                    ])
-                @endforeach
-                <label class="col-wide">Observação <textarea name="observacao" placeholder="Algo que a banca precise saber…"></textarea></label>
-                <div class="acoes"><button class="botao" type="submit"><i class="fa fa-paper-plane"></i> Inscrever e gerar protocolo</button></div>
-            </form>
-        </div>
-    @elseif($processo)
-        <p class="flash warn">Inscrições fechadas nesta fase ({{ \iEducar\Packages\BuritiContratacoesTemporarias\Services\FluxoProcesso::rotulo($processo['status']) }}). Abra a fase no edital para liberar o portal e este formulário.</p>
-    @endif
 
     <div class="bloco">
         <h2><i class="fa fa-list"></i> Inscritos ({{ count($linhas ?? []) }})</h2>
@@ -104,4 +83,19 @@
             <p style="color:var(--suave);margin:0">Nenhuma inscrição neste processo ainda.</p>
         @endif
     </div>
+
+    @if(!empty($podeInscrever))
+        @include('buriti-ui::operacao-modal', [
+            'id' => 'modal-nova-inscricao',
+            'titulo' => 'Nova inscrição (SME)',
+            'lead' => 'Use quando a pessoa estiver na secretaria. Externos preferem o portal.',
+            'corpo' => view('act::partials.inscricao-nova', [
+                'processoId' => $processoId,
+                'vagas' => $vagas ?? [],
+                'documentos' => $documentos ?? [],
+                'slaPrefs' => $slaPrefs ?? 3,
+                'anexoMaxKb' => $anexoMaxKb ?? 5120,
+            ])->render(),
+        ])
+    @endif
 @endsection

@@ -17,7 +17,7 @@ return new class extends Migration
 
         Menu::query()->updateOrCreate(['process' => Processos::RAIZ], [
             'description' => 'Processo seletivo: documentos, comissão, inscrição, recurso, protocolo e resultado',
-            'title' => 'Contratações temporárias',
+            'title' => 'Contratações',
         ]);
 
         $links = [

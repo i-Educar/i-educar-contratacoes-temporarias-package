@@ -7,7 +7,7 @@
     Monte o edital como um concurso: documentos com pontuação, banca e fases. Com inscrição aberta, o portal público libera o link no login.
 @endsection
 @section('acoes-topo')
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias') }}"><i class="fa fa-dashboard"></i> Painel</a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias') }}" title="Painel" aria-label="Painel"><i aria-hidden="true" class="fa fa-dashboard"></i></a>
 @endsection
 
 @section('conteudo')

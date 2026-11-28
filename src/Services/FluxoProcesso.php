@@ -107,4 +107,15 @@ final class FluxoProcesso
     {
         return in_array($status, [self::AVALIACAO, self::PRELIMINAR, self::RECURSOS, self::FINAL], true);
     }
+
+    /** Resultado público (PDF) após fases de divulgação / encerramento. */
+    public static function podePublicarResultado(string $status): bool
+    {
+        return in_array($status, [
+            self::PRELIMINAR,
+            self::FINAL,
+            self::HOMOLOGADO,
+            self::ENCERRADO,
+        ], true);
+    }
 }

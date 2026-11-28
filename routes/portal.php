@@ -9,4 +9,8 @@ Route::prefix('contratacoes-temporarias/candidato')->group(function (): void {
     Route::post('/inscrever/{id}', [CandidatoPortalController::class, 'salvar'])->whereNumber('id');
     Route::get('/comprovante/{id}', [CandidatoPortalController::class, 'comprovante'])->whereNumber('id')->name('act.candidato.comprovante');
     Route::get('/protocolo', [CandidatoPortalController::class, 'protocolo'])->name('act.candidato.protocolo');
+    Route::get('/resultados', [CandidatoPortalController::class, 'resultados'])->name('act.candidato.resultados');
+    Route::get('/resultados/{id}/pdf', [CandidatoPortalController::class, 'resultadoPdf'])
+        ->whereNumber('id')
+        ->name('act.candidato.resultados.pdf');
 });

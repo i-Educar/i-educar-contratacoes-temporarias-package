@@ -11,6 +11,8 @@ Route::prefix('contratacoes-temporarias')->group(function (): void {
     Route::get('/processos/{id}', [ActController::class, 'detalheProcesso'])->whereNumber('id');
     Route::post('/processos/{id}/status', [ActController::class, 'alterarStatusProcesso'])->whereNumber('id');
     Route::post('/processos/{id}/documentos', [ActController::class, 'salvarDocumento'])->whereNumber('id');
+    Route::post('/processos/{id}/vagas', [ActController::class, 'salvarVaga'])->whereNumber('id');
+    Route::post('/processos/{id}/vagas/{vagaId}/remover', [ActController::class, 'removerVaga'])->whereNumber('id')->whereNumber('vagaId');
     Route::post('/processos/{id}/comissao', [ActController::class, 'salvarComissao'])->whereNumber('id');
     Route::post('/processos/{id}/comissao/{membroId}/remover', [ActController::class, 'removerComissao'])->whereNumber('id')->whereNumber('membroId');
 
@@ -34,6 +36,7 @@ Route::prefix('contratacoes-temporarias')->group(function (): void {
     Route::get('/anexo/{id}', [ActController::class, 'baixarAnexo'])->whereNumber('id');
 
     Route::get('/classificados', [ActController::class, 'classificados']);
+    Route::post('/classificados/exportar', [ActController::class, 'exportarClassificados']);
     Route::get('/alocacao', [ActController::class, 'alocacao']);
     Route::post('/admitir/{id}', [ActController::class, 'admitir'])->whereNumber('id');
 });

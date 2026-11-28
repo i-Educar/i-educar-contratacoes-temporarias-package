@@ -8,8 +8,9 @@
 @endsection
 
 @section('conteudo')
-    <div class="bloco">
-        <form class="form-grid" method="get" action="{{ url('/contratacoes-temporarias/protocolo') }}">
+    <div class="buriti-filtro-bloco">
+        <h2><i class="fa fa-search"></i> Busca</h2>
+        <form class="buriti-filtro" method="get" action="{{ url('/contratacoes-temporarias/protocolo') }}">
             <label>Protocolo <input name="q" value="{{ $q ?? '' }}" placeholder="ACT-2026-000001" required></label>
             <div class="acoes"><button class="botao" type="submit"><i class="fa fa-search"></i> Buscar</button></div>
         </form>

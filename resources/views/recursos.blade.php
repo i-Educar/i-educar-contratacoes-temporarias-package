@@ -4,7 +4,7 @@
 @section('icone-tela', 'fa-balance-scale')
 @section('titulo-tela', 'Recursos dos candidatos')
 @section('lead')
-    O candidato envia o pedido com PDF; a banca responde como numa conversa de WhatsApp — mensagem a mensagem.
+    O candidato envia o pedido com PDF; a banca registra manifestações oficiais no protocolo do recurso.
 @endsection
 
 @section('conteudo')
@@ -21,20 +21,18 @@
         ])->all();
     @endphp
 
-    <div class="bloco">
-        <form class="form-grid" method="get" action="{{ url('/contratacoes-temporarias/recursos') }}">
+    <div class="buriti-filtro-bloco">
+        <h2><i class="fa fa-filter"></i> Edital</h2>
+        <form class="buriti-filtro" method="get" action="{{ url('/contratacoes-temporarias/recursos') }}">
             @include('buriti-ui::select-busca', [
                 'campo' => 'processo_id',
                 'rotulo' => 'Edital',
                 'icone' => 'fa-gavel',
                 'opcoes' => $opcoesProcesso,
                 'selecionado' => $processoId,
-                'vazio' => '— escolher edital —',
-                'placeholder' => 'Buscar edital…',
-                'ajuda' => 'Filtre os recursos pelo processo seletivo.',
+                'vazio' => 'Escolher edital',
                 'onchange' => 'this.form.submit()',
-                'colWide' => true,
-                'tamanho' => min(6, max(3, count($opcoesProcesso) ?: 3)),
+                'compacto' => true,
             ])
         </form>
     </div>
@@ -62,7 +60,7 @@
                     'campo' => 'anexo',
                     'rotulo' => 'Anexar PDF (opcional)',
                     'tituloAcao' => 'Soltar o PDF do recurso aqui',
-                    'ajuda' => 'Como enviar um documento no WhatsApp — toque ou arraste.',
+                    'ajuda' => 'Anexe o PDF do recurso. Toque ou arraste o arquivo.',
                     'accept' => 'application/pdf,.pdf',
                     'icone' => 'fa-file-pdf-o',
                 ])

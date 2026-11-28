@@ -7,10 +7,20 @@
     Lista ordenada do processo. Quem tem permissão pode <strong>admitir/contratar</strong> — isso cria o servidor e a alocação para o quadro de horários e o diário.
 @endsection
 @section('acoes-topo')
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias') }}"><i class="fa fa-dashboard"></i> Painel</a>
+    @include('exportacao::partials.botoes-exportar', [
+        'action' => url('/contratacoes-temporarias/classificados/exportar'),
+        'formatos' => ['pdf', 'xlsx', 'csv'],
+        'opcoes' => [
+            ['value' => 'lista', 'label' => 'Lista de classificados'],
+        ],
+        'campoExtra' => ['processo_id' => $processoId ?? ''],
+        'tituloModal' => 'Download — Classificados',
+    ])
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias') }}" title="Painel" aria-label="Painel"><i aria-hidden="true" class="fa fa-dashboard"></i></a>
 @endsection
 
 @section('conteudo')
+
     <div class="bloco">
         @if(!empty($linhas))
             <div class="card-grid">

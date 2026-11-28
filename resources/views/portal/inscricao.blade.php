@@ -9,6 +9,8 @@
         Ao final você recebe um protocolo para acompanhar.
     </p>
 
+    @include('buriti-ui::setor-contato', ['setor' => $setor ?? 'act'])
+
     <div class="cartao">
         <p style="margin:0 0 8px">
             <span class="badge ok">Inscrições abertas</span>
@@ -19,6 +21,17 @@
         </p>
         @if(!empty($processo['descricao']))
             <p style="margin:10px 0 0">{{ $processo['descricao'] }}</p>
+        @endif
+        @if(!empty($cargosResumo))
+            <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px">
+                @foreach($cargosResumo as $c)
+                    <span class="badge">
+                        {{ $c['cargo'] }}
+                        · {{ $c['quantidade'] }} vaga{{ $c['quantidade'] > 1 ? 's' : '' }}
+                        @if($c['escolas'] > 0) · {{ $c['escolas'] }} escola{{ $c['escolas'] > 1 ? 's' : '' }}@endif
+                    </span>
+                @endforeach
+            </div>
         @endif
     </div>
 
@@ -35,21 +48,19 @@
             <label>E-mail
                 <input type="email" name="email" value="{{ old('email') }}" placeholder="para avisos da SME">
             </label>
-            <label>Telefone / WhatsApp
+            <label>Telefone
                 <input name="telefone" value="{{ old('telefone') }}" placeholder="(xx) xxxxx-xxxx">
             </label>
 
-            @if(!empty($vagas))
-                @include('buriti-ui::select-multi', [
-                    'campo' => 'preferencias[]',
-                    'rotulo' => 'Preferência de escolas / vagas (ordem de escolha)',
-                    'icone' => 'fa-building',
-                    'opcoes' => collect($vagas)->map(fn ($v) => ['id' => $v['id'], 'nome' => $v['titulo']])->all(),
-                    'selecionados' => old('preferencias', []),
-                    'ajuda' => 'Marque até '.($slaPrefs ?? 3).' opções, como escolher escolas na matrícula — a ordem importa.',
-                    'tamanho' => min(6, max(3, count($vagas))),
-                ])
-            @endif
+            @include('buriti-ui::select-preferencias-vaga', [
+                'campo' => 'preferencias[]',
+                'rotulo' => 'Preferência de cargo e escola',
+                'icone' => 'fa-briefcase',
+                'opcoes' => $vagas ?? [],
+                'selecionados' => old('preferencias', []),
+                'maximo' => (int) ($slaPrefs ?? 3),
+                'ajuda' => 'Toque nos cards para montar a ordem de preferência (até '.($slaPrefs ?? 3).'). Cargo, endereço e turmas/segmento aparecem em cada opção.',
+            ])
 
             @foreach(($documentos ?? []) as $d)
                 @include('buriti-ui::campo-anexo', [

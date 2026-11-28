@@ -1,7 +1,7 @@
 # ROADMAP — Contratações Temporárias (ACT)
 
 > Pacote: `buriti/i-educar-contratacoes-temporarias-package` · TR **5.15** · Prioridade **P0** · Nota **D**  
-> Alinhado a `tmp/DOC-EXECUTIVO-PE-77-2026-LAGUNA-IEDUCAR.md`
+> Alinhado a `packages/buriti/docs/laguna/DOC-EXECUTIVO-PE-77-2026-LAGUNA-IEDUCAR.md`
 
 ## Visão
 

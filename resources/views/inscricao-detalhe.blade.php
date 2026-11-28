@@ -7,8 +7,8 @@
     Protocolo {{ $inscricao['protocolo'] ?? '—' }} · {{ $inscricao['status'] }} · {{ $inscricao['pontuacao'] }} pts
 @endsection
 @section('acoes-topo')
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/inscricoes?processo_id='.$inscricao['processo_id']) }}"><i class="fa fa-list"></i> Inscrições</a>
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/protocolo?q='.urlencode($inscricao['protocolo'] ?? '')) }}"><i class="fa fa-search"></i> Protocolo</a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/inscricoes?processo_id='.$inscricao['processo_id']) }}" title="Inscrições" aria-label="Inscrições"><i aria-hidden="true" class="fa fa-list"></i></a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/protocolo?q='.urlencode($inscricao['protocolo'] ?? '')) }}" title="Protocolo" aria-label="Protocolo"><i aria-hidden="true" class="fa fa-search"></i></a>
 @endsection
 
 @section('conteudo')

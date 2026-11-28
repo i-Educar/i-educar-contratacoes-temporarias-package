@@ -7,10 +7,10 @@
     {{ $processo['numero'] ?? '' }} · {{ $rotulosStatus[$processo['status']] ?? $processo['status'] }} · {{ $inscricoesQtd }} inscrição(ões) — avance as fases como etapas de um concurso.
 @endsection
 @section('acoes-topo')
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/processos') }}"><i class="fa fa-list"></i> Processos</a>
-    <a class="botao claro" href="{{ url('/contratacoes-temporarias/inscricoes?processo_id='.$processo['id']) }}"><i class="fa fa-user-plus"></i> Inscrições</a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/processos') }}" title="Processos" aria-label="Processos"><i aria-hidden="true" class="fa fa-list"></i></a>
+    <a class="botao claro icone" href="{{ url('/contratacoes-temporarias/inscricoes?processo_id='.$processo['id']) }}" title="Inscrições" aria-label="Inscrições"><i aria-hidden="true" class="fa fa-user-plus"></i></a>
     @if(($processo['status'] ?? '') === 'inscricoes_abertas')
-        <a class="botao" href="{{ url('/contratacoes-temporarias/candidato/inscrever/'.$processo['id']) }}" target="_blank" rel="noopener"><i class="fa fa-external-link"></i> Link público</a>
+        <a class="botao icone" href="{{ url('/contratacoes-temporarias/candidato/inscrever/'.$processo['id']) }}" target="_blank" rel="noopener" title="Link público" aria-label="Link público"><i aria-hidden="true" class="fa fa-external-link"></i></a>
     @endif
 @endsection
 
@@ -76,6 +76,114 @@
             <label>Extensões <input name="extensoes" value="pdf" placeholder="pdf, jpg"></label>
             <label class="col-wide">Descrição / regra de pontuação <input name="descricao" placeholder="Ex.: 2 pts por ano, máx 10"></label>
             <div class="acoes"><button class="botao claro" type="submit"><i class="fa fa-plus"></i> Incluir documento</button></div>
+        </form>
+    </section>
+
+    <div class="fluxo-sep">Cargos e escolas do edital</div>
+
+    <section class="fluxo-bloco docs">
+        <header class="fluxo-cabeca">
+            <div>
+                <h2><i class="fa fa-briefcase"></i> Cargos / vagas disponíveis</h2>
+                <p>O que o candidato vê no portal: cargo, escola, endereço e segmento/turmas.</p>
+            </div>
+            <span class="selo-fluxo">Ofertas</span>
+        </header>
+
+        @if(!empty($cargosResumo))
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px">
+                @foreach($cargosResumo as $c)
+                    <span class="badge ok">
+                        {{ $c['cargo'] }} · {{ $c['quantidade'] }} vaga(s)
+                        @if($c['escolas'] > 0) · {{ $c['escolas'] }} escola(s)@endif
+                    </span>
+                @endforeach
+            </div>
+        @endif
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Cargo</th>
+                    <th>Escola</th>
+                    <th>Endereço</th>
+                    <th>Segmento / turmas</th>
+                    <th>Qtd.</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse(($vagas ?? []) as $v)
+                <tr>
+                    <td>
+                        <strong>{{ $v['cargo'] ?: '—' }}</strong>
+                        @if(!empty($v['carga_horaria']))
+                            <br><small style="color:var(--suave)">{{ $v['carga_horaria'] }}</small>
+                        @endif
+                    </td>
+                    <td>{{ $v['escola'] ?: '—' }}</td>
+                    <td><small>{{ $v['endereco'] ?: '—' }}</small></td>
+                    <td>
+                        <small>
+                            @if($v['segmento'] !== ''){{ $v['segmento'] }}@endif
+                            @if($v['turmas'] !== '')
+                                @if($v['segmento'] !== '')<br>@endif
+                                Turmas: {{ $v['turmas'] }}
+                            @endif
+                            @if($v['segmento'] === '' && $v['turmas'] === '')—@endif
+                        </small>
+                    </td>
+                    <td>{{ $v['quantidade'] }}</td>
+                    <td>
+                        <form method="post" action="{{ url('/contratacoes-temporarias/processos/'.$processo['id'].'/vagas/'.$v['registro_id'].'/remover') }}" onsubmit="return confirm('Remover esta oferta do edital?')">
+                            @csrf
+                            <button class="botao claro" type="submit" style="padding:2px 8px;font-size:.75rem">Remover</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6">Nenhuma vaga ainda — cadastre cargo e escola abaixo para aparecer no portal do candidato.</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+
+        <form class="form-grid" method="post" action="{{ url('/contratacoes-temporarias/processos/'.$processo['id'].'/vagas') }}" style="margin-top:14px">
+            @csrf
+            <label>Cargo *
+                <input name="cargo" required list="act-cargos-sugeridos" placeholder="Ex.: PEB I, PEB II, Auxiliar de turma" value="{{ old('cargo') }}">
+            </label>
+            <datalist id="act-cargos-sugeridos">
+                <option value="PEB I">
+                <option value="PEB II">
+                <option value="Professor de Apoio">
+                <option value="Auxiliar de turma">
+                <option value="Monitor">
+                <option value="Merendeira">
+                <option value="Agente administrativo">
+            </datalist>
+            <label>Quantidade de vagas <input type="number" name="quantidade" min="1" value="{{ old('quantidade', 1) }}"></label>
+            <label>Carga horária <input name="carga_horaria" placeholder="Ex.: 20h / 40h" value="{{ old('carga_horaria') }}"></label>
+            @include('buriti-ui::select-busca', [
+                'campo' => 'escola_id',
+                'rotulo' => 'Escola de lotação',
+                'icone' => 'fa-building',
+                'opcoes' => collect($escolasCatalogo ?? [])->map(fn ($e) => [
+                    'id' => $e['id'],
+                    'nome' => $e['nome'],
+                    'meta' => $e['meta'] ?? '',
+                ])->all(),
+                'selecionado' => old('escola_id'),
+                'vazio' => '— selecione a escola —',
+                'ajuda' => 'Endereço, cursos e turmas são preenchidos automaticamente a partir do cadastro da escola.',
+                'colWide' => true,
+            ])
+            <label class="col-wide">Segmento / cursos (opcional, sobrescreve o automático)
+                <input name="segmento" value="{{ old('segmento') }}" placeholder="Deixe em branco para usar os cursos da escola">
+            </label>
+            <label class="col-wide">Turmas (opcional)
+                <input name="turmas" value="{{ old('turmas') }}" placeholder="Deixe em branco para listar turmas ativas do ano">
+            </label>
+            <div class="acoes"><button class="botao" type="submit"><i class="fa fa-plus"></i> Incluir cargo / vaga</button></div>
         </form>
     </section>
 

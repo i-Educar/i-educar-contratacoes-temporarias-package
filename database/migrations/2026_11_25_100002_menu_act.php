@@ -28,7 +28,7 @@ return new class extends Migration
 
         $raiz = Menu::query()->updateOrCreate(['process' => Processos::RAIZ], [
             'parent_id' => $servidores->getKey(),
-            'title' => 'Contratações temporárias',
+            'title' => 'Contratações',
             'description' => 'Classificação, preferência de vagas e alocação automática conforme edital',
             'link' => '/contratacoes-temporarias',
             'icon' => 'fa-briefcase',

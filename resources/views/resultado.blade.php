@@ -16,20 +16,18 @@
         ])->all();
     @endphp
 
-    <div class="bloco">
-        <form class="form-grid" method="get" action="{{ url('/contratacoes-temporarias/resultado') }}">
+    <div class="buriti-filtro-bloco">
+        <h2><i class="fa fa-filter"></i> Edital</h2>
+        <form class="buriti-filtro" method="get" action="{{ url('/contratacoes-temporarias/resultado') }}">
             @include('buriti-ui::select-busca', [
                 'campo' => 'processo_id',
                 'rotulo' => 'Edital',
                 'icone' => 'fa-trophy',
                 'opcoes' => $opcoesProcesso,
                 'selecionado' => $processoId,
-                'vazio' => '— escolher edital —',
-                'placeholder' => 'Buscar edital…',
-                'ajuda' => 'Processo cuja classificação você quer gerar ou consultar.',
+                'vazio' => 'Escolher edital',
                 'onchange' => 'this.form.submit()',
-                'colWide' => true,
-                'tamanho' => min(6, max(3, count($opcoesProcesso) ?: 3)),
+                'compacto' => true,
             ])
         </form>
         @if(!empty($podeGerar) && $processoId)

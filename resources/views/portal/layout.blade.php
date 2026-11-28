@@ -52,12 +52,12 @@
         h1 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 1.9rem); line-height: 1.2; letter-spacing: -.02em; }
         .lead { margin: 0 0 20px; font-size: 1.02rem; color: var(--suave); max-width: 52rem; }
         .cartao {
-            background: #fff; border: 1px solid var(--linha); border-radius: 16px;
+            background: var(--superficie, #fff); border: 1px solid var(--linha); border-radius: 16px;
             padding: 18px 20px; margin: 0 0 14px; box-shadow: 0 10px 24px rgba(44, 18, 24, .05);
             border-top: 3px solid var(--cor);
         }
         .cartao h2 { margin: 0 0 10px; font-size: 1.08rem; display: flex; align-items: center; gap: 8px; }
-        .passo { background: #fff; border: 1px solid var(--linha); border-radius: 14px; padding: 14px 16px; }
+        .passo { background: var(--superficie, #fff); border: 1px solid var(--linha); border-radius: 14px; padding: 14px 16px; }
         .passo i {
             width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
             background: var(--clara); color: var(--cor); margin-bottom: 8px;
@@ -69,7 +69,7 @@
             border: 0; border-radius: 10px; padding: 10px 16px; font: inherit; font-weight: 700;
             text-decoration: none; cursor: pointer;
         }
-        .botao.claro { background: #fff; color: var(--cor); border: 1px solid color-mix(in srgb, var(--cor) 35%, var(--linha)); }
+        .botao.claro { background: var(--superficie, #fff); color: var(--cor); border: 1px solid color-mix(in srgb, var(--cor) 35%, var(--linha)); }
         .acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
         .flash { border-radius: 12px; padding: 12px 14px; margin: 0 0 16px; }
         .flash.ok { background: var(--ok-fundo); color: var(--ok); }
@@ -85,13 +85,13 @@
         .form-grid label { display: grid; gap: 4px; font-size: .82rem; font-weight: 700; color: var(--suave); }
         .form-grid input, .form-grid select, .form-grid textarea {
             min-height: 40px; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 10px;
-            font: inherit; background: #fff; color: var(--tinta); width: 100%;
+            font: inherit; background: var(--superficie, #fff); color: var(--tinta); width: 100%;
         }
         .form-grid textarea { min-height: 80px; resize: vertical; }
         .form-grid .col-wide { grid-column: 1 / -1; }
         .protocolo-grande { font-size: 1.55rem; letter-spacing: .04em; font-weight: 800; margin: 8px 0; color: var(--cor); }
         footer.rodape-portal {
-            background: #fff; border-top: 1px solid var(--linha); color: var(--suave);
+            background: var(--superficie, #fff); border-top: 1px solid var(--linha); color: var(--suave);
             padding: 16px 0; font-size: .82rem; text-align: center;
         }
     </style>
@@ -112,6 +112,7 @@
             <nav class="portal-nav" aria-label="Portal do candidato">
                 <a href="{{ url('/contratacoes-temporarias/candidato') }}"><i class="fa fa-home"></i> Editais</a>
                 <a href="{{ url('/contratacoes-temporarias/candidato/protocolo') }}"><i class="fa fa-search"></i> Acompanhar</a>
+                <a href="{{ url('/contratacoes-temporarias/candidato/resultados') }}"><i class="fa fa-list-ol"></i> Resultados</a>
                 <a href="{{ url('/login') }}"><i class="fa fa-sign-in"></i> Área da SME</a>
             </nav>
         </div>
@@ -119,6 +120,14 @@
     <main class="portal-main">
         @if(session('ok')) <p class="flash ok">{{ session('ok') }}</p> @endif
         @if(session('erro')) <p class="flash erro">{{ session('erro') }}</p> @endif
+
+            @hasSection('foco')
+                @yield('foco')
+            @endif
+            @hasSection('trilho')
+                <nav class="buriti-trilho" aria-label="Ações da tela">@yield('trilho')</nav>
+            @endif
+
         @yield('conteudo')
     </main>
     <footer class="rodape-portal">
